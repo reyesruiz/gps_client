@@ -1,11 +1,11 @@
 import gps
 import serial
-
+import time
 
 Serial_Device = "/dev/ttyACM0"
-
 def get_position(gps):
-    gps_data = gps.readlines()
+    gps_data = gps.read_all().decode("utf-8").split('\r\n')
+    gps_parsed_data = dict()
     gps_parsed_data = {'date': "",
                 'time': "",
                 'latitude': "",
@@ -17,9 +17,7 @@ def get_position(gps):
                 'altitude_msl': "",
                 'number_of_satellites_in_use': ""
                 }
-
     for message in gps_data:
-        message = message.decode("utf-8")
         parts = message.split(',')
         #I want GPRMC and
         if parts[0] == '$GPRMC':
@@ -44,7 +42,9 @@ def main():
     running = True
     while running == True:
         try:
+            text = str()
             print(get_position(gps))
+            time.sleep(1)
         except KeyboardInterrupt:
             running = False
             gps.close()
