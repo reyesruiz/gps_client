@@ -39,5 +39,16 @@ def get_position(gps):
             gps_parsed_data['altitude_msl'] = parts[9]
     return gps_parsed_data
 
-gps = serial.Serial(Serial_Device, baudrate = 9600, timeout = 0.5)
-print(get_position(gps))
+def main():
+    gps = serial.Serial(Serial_Device, baudrate = 9600, timeout = 0.5)
+    running = True
+    while running == True:
+        try:
+            print(get_position(gps))
+        except KeyboardInterrupt:
+            running = False
+            gps.close()
+            print("Done")
+
+if __name__ == '__main__':
+    main()
