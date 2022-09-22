@@ -18,10 +18,12 @@ def get_position(gps):
                 'altitude_msl': "",
                 'number_of_satellites_in_use': ""
                 }
-    for message in gps_data:
+    GPRMC = False
+    GPGGA = False
+    for message in gps_data[::-1]:
         parts = message.split(',')
-        #I want GPRMC and
-        if parts[0] == '$GPRMC':
+        #I want GPRMC and GPGGA
+        if parts[0] == '$GPRMC' and GPRMC == False:
             receiver_warning = parts[2]
             if receiver_warning == 'A':
                 gps_parsed_data['latitude'] = parts[3]
@@ -32,10 +34,14 @@ def get_position(gps):
                 gps_parsed_data['true_course'] = parts[8]
                 gps_parsed_data['date'] = parts[9]
                 gps_parsed_data['time'] = parts[1]
+                GPRMC = True
 
-        elif parts[0] == '$GPGGA':
+        elif parts[0] == '$GPGGA' and GPGGA == False:
             gps_parsed_data['number_of_satellites_in_use'] = parts[7]
             gps_parsed_data['altitude_msl'] = parts[9]
+            GPGGA = True
+        if GPRMC == True and GPGGA == True:
+            break
     return gps_parsed_data
 
 def human_readable(data):
