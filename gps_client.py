@@ -110,9 +110,12 @@ def main():
             text = str()
             time.sleep(1)
             data = get_position(gps)
-            print(data)
+            #print(data)
             text = human_readable(data)
             print(text)
+            f = open("gps_info.log", "a")
+            f.write(text + "\n")
+            f.close
         except KeyboardInterrupt:
             running = False
             gps.close()
