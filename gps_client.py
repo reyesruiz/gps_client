@@ -103,7 +103,14 @@ def human_readable(data):
     return human_readable_text
 
 def main():
-    gps = serial.Serial(Serial_Device, baudrate = 9600, timeout = 0.5)
+    found_gps = False
+    while found_gps != True:
+        try:
+            gps = serial.Serial(Serial_Device, baudrate = 9600, timeout = 0.5)
+            found_gps = True
+        except:
+            print("An exception occurred, GPS device might not be present")
+            time.sleep(5)
     running = True
     while running == True:
         try:
