@@ -2,8 +2,17 @@ import gps
 import serial
 import time
 import re
+import gpxpy
 
 Serial_Device = "/dev/ttyACM0"
+timestr = time.strftime("%Y%m%d-%H%M%S")
+gpx_file_name = timestr + ".gpx"
+gpx = gpxpy.gpx.GPX()
+gpx_track = gpxpy.gpx.GPXTrack()
+gpx.tracks.append(gpx_track)
+gpx_segment = gpxpy.gpx.GPXTrackSegment()
+gpx_track.segments.append(gpx_segment)
+
 def get_position(gps):
     gps_data = gps.read_all().decode("utf-8").split('\r\n')
     gps_parsed_data = dict()
@@ -15,7 +24,7 @@ def get_position(gps):
                 'longitude_orientation': "",
                 'speed_knots': "",
                 'true_course': "",
-                'altitude_msl': "",
+                'elevation_msl': "",
                 'number_of_satellites_in_use': ""
                 }
     GPRMC = False
@@ -38,7 +47,7 @@ def get_position(gps):
 
         elif parts[0] == '$GPGGA' and GPGGA == False:
             gps_parsed_data['number_of_satellites_in_use'] = parts[7]
-            gps_parsed_data['altitude_msl'] = parts[9]
+            gps_parsed_data['elevation_msl'] = parts[9]
             GPGGA = True
         if GPRMC == True and GPGGA == True:
             break
@@ -70,7 +79,7 @@ def human_readable(data):
     longitude_minutes = m[0][1]
     longitude_seconds = str(round((float('0.' + longitude_parts[1]) * 60), 2))
     longitude_orientation = data['longitude_orientation']
-    altitude = str(round((float(data['altitude_msl']) * 3.280840), 2))
+    elevation = str(round((float(data['elevation_msl']) * 3.280840), 2))
     speed = str(round((float(data['speed_knots']) * 1.15078), 2))
     true_course = data['true_course']
     compass_orientation = str()
@@ -90,7 +99,7 @@ def human_readable(data):
         elif course >= 157.5 and course <= 202.5:
             compass_orientation = 'S'
         elif course >= 202.5 and course <= 247.5:
-            compass_orientation = 'Sw'
+            compass_orientation = 'SW'
         elif course >= 247.5 and course <= 292.5:
             compass_orientation = 'W'
         elif course >= 292.5 and course <= 337.5:
@@ -99,8 +108,35 @@ def human_readable(data):
             compass_orientation = 'N'
     satellites = data['number_of_satellites_in_use']
 
-    human_readable_text = date + ' ' + time + " " + latitude_degrees + chr(176) + latitude_minutes + '\'' + latitude_seconds + '\"' + latitude_orientation + " " + longitude_degrees + chr(176) + longitude_minutes + '\'' + longitude_seconds + '\"' + longitude_orientation + " " + altitude + "ft MSL " + speed + " Mph " + true_course + chr(176) + " " + compass_orientation + " satellites in use: " + satellites
+    human_readable_text = date + ' ' + time + " " + latitude_degrees + chr(176) + latitude_minutes + '\'' + latitude_seconds + '\"' + latitude_orientation + " " + longitude_degrees + chr(176) + longitude_minutes + '\'' + longitude_seconds + '\"' + longitude_orientation + " " + elevation + "ft MSL " + speed + " Mph " + true_course + chr(176) + " " + compass_orientation + " satellites in use: " + satellites
     return human_readable_text
+
+def save_gpx(data):
+    gpx_file = open(gpx_file_name, 'w')
+    pattern = re.compile("(\d{2})")
+    latitude_parts = data['latitude'].split('.')
+    m = pattern.findall(latitude_parts[0])
+    latitude_degrees = m[0]
+    latitude_minutes = m[1]
+    latitude_seconds = str(round((float('0.' + latitude_parts[1]) * 60), 2))
+    latitude_orientation = data['latitude_orientation']
+    longitude_parts = data['longitude'].split('.')
+    pattern = re.compile("(\d{3})(\d{2})")
+    m = pattern.findall(longitude_parts[0])
+    longitude_degrees = m[0][0]
+    longitude_minutes = m[0][1]
+    longitude_seconds = str(round((float('0.' + longitude_parts[1]) * 60), 2))
+    longitude_orientation = data['longitude_orientation']
+    elevation = data['elevation_msl']
+    latitude = float(latitude_degrees) + (float(latitude_minutes)/60)+(float(latitude_seconds)/3600)
+    longitude = float(longitude_degrees) + (float(longitude_minutes)/60)+(float(longitude_seconds)/3600)
+    if latitude_orientation == 'S':
+        latitude = 0 - latitude
+    if longitude_orientation == 'W':
+        longitude = 0 - longitude
+    gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(latitude, longitude, elevation))
+    gpx_file.write(str(gpx.to_xml()))
+    gpx_file.close()
 
 def main():
     found_gps = False
@@ -123,9 +159,11 @@ def main():
             f = open("gps_info.log", "a")
             f.write(text + "\n")
             f.close
+            save_gpx(data)
         except KeyboardInterrupt:
             running = False
             gps.close()
+            print('Created GPX:', gpx.to_xml())
             print("Done")
 
 if __name__ == '__main__':
