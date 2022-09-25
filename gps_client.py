@@ -1,4 +1,3 @@
-import gps
 import serial
 import time
 import re
