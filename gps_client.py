@@ -1,11 +1,10 @@
-import gps
 import serial
 import time
 import re
 import gpxpy
 from datetime import datetime, timezone, tzinfo
 
-Serial_Device = "/dev/ttyACM0"
+SERIAL_DEVICE = "/dev/ttyACM0"
 timestr = time.strftime("%Y%m%d-%H%M%S")
 gpx_file_name = timestr + ".gpx"
 gpx = gpxpy.gpx.GPX()
@@ -16,7 +15,6 @@ gpx_track.segments.append(gpx_segment)
 
 def get_position(gps):
     gps_data = gps.read_all().decode("utf-8").split('\r\n')
-    gps_parsed_data = dict()
     gps_parsed_data = {'date': "",
                 'time': "",
                 'latitude': "",
@@ -55,7 +53,7 @@ def get_position(gps):
     return gps_parsed_data
 
 def human_readable(data):
-    pattern = re.compile("(\d{2})")
+    pattern = re.compile("(\\d{2})")
     m = pattern.findall(data['date'])
     year = '20' + str(m[2])
     month = str(m[1])
@@ -74,7 +72,7 @@ def human_readable(data):
     latitude_seconds = str(round((float('0.' + latitude_parts[1]) * 60), 2))
     latitude_orientation = data['latitude_orientation']
     longitude_parts = data['longitude'].split('.')
-    pattern = re.compile("(\d{3})(\d{2})")
+    pattern = re.compile("(\\d{3})(\\d{2})")
     m = pattern.findall(longitude_parts[0])
     longitude_degrees = m[0][0]
     longitude_minutes = m[0][1]
@@ -113,7 +111,7 @@ def human_readable(data):
     return human_readable_text
 
 def save_gpx(data):
-    pattern = re.compile("(\d{2})")
+    pattern = re.compile("(\\d{2})")
     latitude_parts = data['latitude'].split('.')
     m = pattern.findall(latitude_parts[0])
     latitude_degrees = m[0]
@@ -121,7 +119,7 @@ def save_gpx(data):
     latitude_seconds = str(round((float('0.' + latitude_parts[1]) * 60), 2))
     latitude_orientation = data['latitude_orientation']
     longitude_parts = data['longitude'].split('.')
-    pattern = re.compile("(\d{3})(\d{2})")
+    pattern = re.compile("(\\d{3})(\\d{2})")
     m = pattern.findall(longitude_parts[0])
     longitude_degrees = m[0][0]
     longitude_minutes = m[0][1]
@@ -134,7 +132,7 @@ def save_gpx(data):
         latitude = 0 - latitude
     if longitude_orientation == 'W':
         longitude = 0 - longitude
-    pattern = re.compile("(\d{2})")
+    pattern = re.compile("(\\d{2})")
     m = pattern.findall(data['date'])
     year = '20' + str(m[2])
     month = str(m[1])
@@ -162,7 +160,7 @@ def main():
     found_gps = False
     while found_gps != True:
         try:
-            gps = serial.Serial(Serial_Device, baudrate = 9600, timeout = 0.5)
+            gps = serial.Serial(SERIAL_DEVICE, baudrate = 9600, timeout = 0.5)
             found_gps = True
         except:
             print("An exception occurred, GPS device might not be present")
