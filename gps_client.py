@@ -113,7 +113,6 @@ def human_readable(data):
     return human_readable_text
 
 def save_gpx(data):
-    gpx_file = open(gpx_file_name, 'w')
     pattern = re.compile("(\d{2})")
     latitude_parts = data['latitude'].split('.')
     m = pattern.findall(latitude_parts[0])
@@ -148,8 +147,15 @@ def save_gpx(data):
     second = m[2]
     gps_timestamp = datetime.now(timezone.utc)
     gps_timestamp = gps_timestamp.replace(year=int(year), month=int(month), day=int(day), hour=int(hour), minute=int(minute), second=int(second), microsecond=0)
-    gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(latitude, longitude, elevation, gps_timestamp))
-    gpx_file.write(str(gpx.to_xml()))
+    course = data['true_course']
+    speed = data['speed_knots']
+    gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(latitude=latitude, longitude=longitude, elevation=elevation, time=gps_timestamp, speed=speed))
+    gpx_file = open(gpx_file_name, 'w')
+    gpx_file.write(str(gpx.to_xml('1.0')))
+    gpx_file.close()
+    gpx_file_name_11 = gpx_file_name + "11.gpx"
+    gpx_file = open(gpx_file_name_11, 'w')
+    gpx_file.write(str(gpx.to_xml('1.1')))
     gpx_file.close()
 
 def main():
