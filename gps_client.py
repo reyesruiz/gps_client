@@ -55,7 +55,7 @@ def get_position(gps):
     return gps_parsed_data
 
 def human_readable(data):
-    pattern = re.compile("(\d{2})")
+    pattern = re.compile("(\\d{2})")
     m = pattern.findall(data['date'])
     year = '20' + str(m[2])
     month = str(m[1])
@@ -74,7 +74,7 @@ def human_readable(data):
     latitude_seconds = str(round((float('0.' + latitude_parts[1]) * 60), 2))
     latitude_orientation = data['latitude_orientation']
     longitude_parts = data['longitude'].split('.')
-    pattern = re.compile("(\d{3})(\d{2})")
+    pattern = re.compile("(\\d{3})(\\d{2})")
     m = pattern.findall(longitude_parts[0])
     longitude_degrees = m[0][0]
     longitude_minutes = m[0][1]
@@ -113,7 +113,7 @@ def human_readable(data):
     return human_readable_text
 
 def save_gpx(data):
-    pattern = re.compile("(\d{2})")
+    pattern = re.compile("(\\d{2})")
     latitude_parts = data['latitude'].split('.')
     m = pattern.findall(latitude_parts[0])
     latitude_degrees = m[0]
@@ -121,7 +121,7 @@ def save_gpx(data):
     latitude_seconds = str(round((float('0.' + latitude_parts[1]) * 60), 2))
     latitude_orientation = data['latitude_orientation']
     longitude_parts = data['longitude'].split('.')
-    pattern = re.compile("(\d{3})(\d{2})")
+    pattern = re.compile("(\\d{3})(\\d{2})")
     m = pattern.findall(longitude_parts[0])
     longitude_degrees = m[0][0]
     longitude_minutes = m[0][1]
@@ -134,7 +134,7 @@ def save_gpx(data):
         latitude = 0 - latitude
     if longitude_orientation == 'W':
         longitude = 0 - longitude
-    pattern = re.compile("(\d{2})")
+    pattern = re.compile("(\\d{2})")
     m = pattern.findall(data['date'])
     year = '20' + str(m[2])
     month = str(m[1])
