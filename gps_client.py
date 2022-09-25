@@ -15,7 +15,6 @@ gpx_track.segments.append(gpx_segment)
 
 def get_position(gps):
     gps_data = gps.read_all().decode("utf-8").split('\r\n')
-    gps_parsed_data = dict()
     gps_parsed_data = {'date': "",
                 'time': "",
                 'latitude': "",
