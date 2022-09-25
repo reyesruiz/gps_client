@@ -5,7 +5,7 @@ import re
 import gpxpy
 from datetime import datetime, timezone, tzinfo
 
-Serial_Device = "/dev/ttyACM0"
+SERIAL_DEVICE = "/dev/ttyACM0"
 timestr = time.strftime("%Y%m%d-%H%M%S")
 gpx_file_name = timestr + ".gpx"
 gpx = gpxpy.gpx.GPX()
@@ -162,7 +162,7 @@ def main():
     found_gps = False
     while found_gps != True:
         try:
-            gps = serial.Serial(Serial_Device, baudrate = 9600, timeout = 0.5)
+            gps = serial.Serial(SERIAL_DEVICE, baudrate = 9600, timeout = 0.5)
             found_gps = True
         except:
             print("An exception occurred, GPS device might not be present")
