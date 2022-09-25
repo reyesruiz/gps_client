@@ -1,8 +1,8 @@
-import serial
 import time
 import re
+from datetime import datetime, timezone
+import serial
 import gpxpy
-from datetime import datetime, timezone, tzinfo
 
 SERIAL_DEVICE = "/dev/ttyACM0"
 timestr = time.strftime("%Y%m%d-%H%M%S")
@@ -26,12 +26,12 @@ def get_position(gps):
                 'elevation_msl': "",
                 'number_of_satellites_in_use': ""
                 }
-    GPRMC = False
-    GPGGA = False
+    gprmc = False
+    gpgga = False
     for message in gps_data[::-1]:
         parts = message.split(',')
         #I want GPRMC and GPGGA
-        if parts[0] == '$GPRMC' and GPRMC == False:
+        if parts[0] == '$GPRMC' and gprmc == False:
             receiver_warning = parts[2]
             if receiver_warning == 'A':
                 gps_parsed_data['latitude'] = parts[3]
@@ -42,13 +42,13 @@ def get_position(gps):
                 gps_parsed_data['true_course'] = parts[8]
                 gps_parsed_data['date'] = parts[9]
                 gps_parsed_data['time'] = parts[1]
-                GPRMC = True
+                gprmc = True
 
-        elif parts[0] == '$GPGGA' and GPGGA == False:
+        elif parts[0] == '$GPGGA' and gpgga == False:
             gps_parsed_data['number_of_satellites_in_use'] = parts[7]
             gps_parsed_data['elevation_msl'] = parts[9]
-            GPGGA = True
-        if GPRMC == True and GPGGA == True:
+            gpgga = True
+        if gprmc == True and gpgga == True:
             break
     return gps_parsed_data
 
@@ -137,7 +137,6 @@ def save_gpx(data):
     year = '20' + str(m[2])
     month = str(m[1])
     day = str(m[0])
-    date = year + '/' + month + '/' + day
     time_parts = data['time'].split('.')
     m = pattern.findall(time_parts[0])
     hour = m[0]
@@ -145,7 +144,7 @@ def save_gpx(data):
     second = m[2]
     gps_timestamp = datetime.now(timezone.utc)
     gps_timestamp = gps_timestamp.replace(year=int(year), month=int(month), day=int(day), hour=int(hour), minute=int(minute), second=int(second), microsecond=0)
-    course = data['true_course']
+    #course = data['true_course']
     speed = data['speed_knots']
     gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(latitude=latitude, longitude=longitude, elevation=elevation, time=gps_timestamp, speed=speed))
     gpx_file = open(gpx_file_name, 'w')
@@ -176,7 +175,7 @@ def main():
             print(text)
             f = open("gps_info.log", "a")
             f.write(text + "\n")
-            f.close
+            f.close()
             save_gpx(data)
         except KeyboardInterrupt:
             running = False
