@@ -3,6 +3,7 @@ import serial
 import time
 import re
 import gpxpy
+from datetime import datetime, timezone, tzinfo
 
 Serial_Device = "/dev/ttyACM0"
 timestr = time.strftime("%Y%m%d-%H%M%S")
@@ -134,7 +135,20 @@ def save_gpx(data):
         latitude = 0 - latitude
     if longitude_orientation == 'W':
         longitude = 0 - longitude
-    gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(latitude, longitude, elevation))
+    pattern = re.compile("(\d{2})")
+    m = pattern.findall(data['date'])
+    year = '20' + str(m[2])
+    month = str(m[1])
+    day = str(m[0])
+    date = year + '/' + month + '/' + day
+    time_parts = data['time'].split('.')
+    m = pattern.findall(time_parts[0])
+    hour = m[0]
+    minute = m[1]
+    second = m[2]
+    gps_timestamp = datetime.now(timezone.utc)
+    gps_timestamp = gps_timestamp.replace(year=int(year), month=int(month), day=int(day), hour=int(hour), minute=int(minute), second=int(second), microsecond=0)
+    gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(latitude, longitude, elevation, gps_timestamp))
     gpx_file.write(str(gpx.to_xml()))
     gpx_file.close()
 
