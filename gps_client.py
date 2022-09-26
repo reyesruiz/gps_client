@@ -1,3 +1,10 @@
+'''
+Python gps client
+Copyright 2022 Reyes Ruiz
+
+https://github.com/reyesruiz/gps_client
+'''
+
 import time
 import re
 from datetime import datetime, timezone
@@ -15,6 +22,9 @@ gpx_segment = gpxpy.gpx.GPXTrackSegment()
 gpx_track.segments.append(gpx_segment)
 
 def get_position(gps):
+    '''
+    Parsing gps data from device and outputing it to dictionary
+    '''
     gps_data = gps.read_all().decode("utf-8").split('\r\n')
     gps_parsed_data = {'date': "",
                 'time': "",
@@ -32,7 +42,7 @@ def get_position(gps):
     for message in gps_data[::-1]:
         parts = message.split(',')
         #I want GPRMC and GPGGA
-        if parts[0] == '$GPRMC' and gprmc == False:
+        if parts[0] == '$GPRMC' and not gprmc:
             receiver_warning = parts[2]
             if receiver_warning == 'A':
                 gps_parsed_data['latitude'] = parts[3]
@@ -45,40 +55,45 @@ def get_position(gps):
                 gps_parsed_data['time'] = parts[1]
                 gprmc = True
 
-        elif parts[0] == '$GPGGA' and gpgga == False:
+        elif parts[0] == '$GPGGA' and not gpgga:
             gps_parsed_data['number_of_satellites_in_use'] = parts[7]
             gps_parsed_data['elevation_msl'] = parts[9]
             gpgga = True
-        if gprmc == True and gpgga == True:
+        if gprmc and gpgga:
             break
     return gps_parsed_data
 
 def human_readable(data):
+    '''
+    Returning a human readable output, with gps information parsed and formatted
+    for better reading, so far it is in degree, minute, second, miles, and feet.
+    '''
     pattern = re.compile("(\\d{2})")
-    m = pattern.findall(data['date'])
-    year = '20' + str(m[2])
-    month = str(m[1])
-    day = str(m[0])
-    date = year + '/' + month + '/' + day
-    time_parts = data['time'].split('.')
-    m = pattern.findall(time_parts[0])
-    hour = m[0]
-    minute = m[1]
-    second = m[2]
-    time = hour + ':' + minute + ':' + second
+    match_results = pattern.findall(data['date'])
+    #GPS Date Time as YYYY/MM/DD hh:mm:ss
+    gps_date_time =  '20' + str(match_results[2]) + '/' \
+            +  str(match_results[1]) + '/' \
+            +  str(match_results[0])
+    match_results = pattern.findall(data['time'].split('.')[0])
+    gps_date_time = gps_date_time + " " \
+            + match_results[0] + ':' \
+            + match_results[1] + ':' \
+            + match_results[2]
     latitude_parts = data['latitude'].split('.')
-    m = pattern.findall(latitude_parts[0])
-    latitude_degrees = m[0]
-    latitude_minutes = m[1]
-    latitude_seconds = str(round((float('0.' + latitude_parts[1]) * 60), 2))
-    latitude_orientation = data['latitude_orientation']
+    match_results = pattern.findall(latitude_parts[0])
+    # latitude degrees minutes seconds orientation
+    latitude = match_results[0] + chr(176) \
+            + match_results[1] + chr(39) \
+            + str(round((float('0.' + latitude_parts[1]) * 60), 2)) + chr(34) \
+            + data['latitude_orientation']
     longitude_parts = data['longitude'].split('.')
     pattern = re.compile("(\\d{3})(\\d{2})")
-    m = pattern.findall(longitude_parts[0])
-    longitude_degrees = m[0][0]
-    longitude_minutes = m[0][1]
-    longitude_seconds = str(round((float('0.' + longitude_parts[1]) * 60), 2))
-    longitude_orientation = data['longitude_orientation']
+    match_results = pattern.findall(longitude_parts[0])
+    # longitude degrees minutes seconds orientation
+    longitude = str(match_results[0][0]) + chr(176) \
+            + str(match_results[0][1]) + chr(39) \
+            + str(round((float('0.' + longitude_parts[1]) * 60), 2)) + chr(34) \
+            + data['longitude_orientation']
     elevation = str(round((float(data['elevation_msl']) * 3.280840), 2))
     speed = str(round((float(data['speed_knots']) * 1.15078), 2))
     true_course = data['true_course']
@@ -88,92 +103,106 @@ def human_readable(data):
         compass_orientation = '-'
     else:
         course = float(true_course)
-        if course >= 0 and course <= 22.5:
+        if course >= 0 <= 22.5:
             compass_orientation = 'N'
-        elif course >= 22.5 and course <= 67.5:
+        elif course >= 22.5 <= 67.5:
             compass_orientation = 'NE'
-        elif course >= 67.5 and course <= 112.5:
+        elif course >= 67.5 <= 112.5:
             compass_orientation = 'E'
-        elif course >= 112.5 and course <= 157.5:
+        elif course >= 112.5 <= 157.5:
             compass_orientation = 'SE'
-        elif course >= 157.5 and course <= 202.5:
+        elif course >= 157.5 <= 202.5:
             compass_orientation = 'S'
-        elif course >= 202.5 and course <= 247.5:
+        elif course >= 202.5 <= 247.5:
             compass_orientation = 'SW'
-        elif course >= 247.5 and course <= 292.5:
+        elif course >= 247.5 <= 292.5:
             compass_orientation = 'W'
-        elif course >= 292.5 and course <= 337.5:
+        elif course >= 292.5 <= 337.5:
             compass_orientation = 'NW'
-        elif course >= 337.5 and course <= 360:
+        elif course >= 337.5 <= 360:
             compass_orientation = 'N'
     satellites = data['number_of_satellites_in_use']
 
-    human_readable_text = date + ' ' + time + " " + latitude_degrees + chr(176) + latitude_minutes + '\'' + latitude_seconds + '\"' + latitude_orientation + " " + longitude_degrees + chr(176) + longitude_minutes + '\'' + longitude_seconds + '\"' + longitude_orientation + " " + elevation + "ft MSL " + speed + " Mph " + true_course + chr(176) + " " + compass_orientation + " satellites in use: " + satellites
+    human_readable_text = gps_date_time + ' '\
+            + latitude + " " \
+            + longitude + " " \
+            + elevation + "ft MSL " \
+            + speed + " Mph " \
+            + true_course + chr(176) + " " \
+            + compass_orientation \
+            + " satellites in use: " + satellites
     return human_readable_text
 
 def save_gpx(data):
+    '''
+    Saving gps data in gpx format both gpx 1.0 and 1.1, 1.0 because it has speed data.
+    '''
     pattern = re.compile("(\\d{2})")
     latitude_parts = data['latitude'].split('.')
-    m = pattern.findall(latitude_parts[0])
-    latitude_degrees = m[0]
-    latitude_minutes = m[1]
-    latitude_seconds = str(round((float('0.' + latitude_parts[1]) * 60), 2))
-    latitude_orientation = data['latitude_orientation']
+    match_results = pattern.findall(latitude_parts[0])
+    latitude = round((float(match_results[0]) \
+            + (float(match_results[1])/60) \
+            + (float(str(float('0.' + latitude_parts[1]) \
+            * 60))/3000)), 2)
+    if data['latitude_orientation'] == 'S':
+        latitude = 0 - latitude
     longitude_parts = data['longitude'].split('.')
     pattern = re.compile("(\\d{3})(\\d{2})")
-    m = pattern.findall(longitude_parts[0])
-    longitude_degrees = m[0][0]
-    longitude_minutes = m[0][1]
-    longitude_seconds = str(round((float('0.' + longitude_parts[1]) * 60), 2))
-    longitude_orientation = data['longitude_orientation']
-    elevation = data['elevation_msl']
-    latitude = float(latitude_degrees) + (float(latitude_minutes)/60)+(float(latitude_seconds)/3600)
-    longitude = float(longitude_degrees) + (float(longitude_minutes)/60)+(float(longitude_seconds)/3600)
-    if latitude_orientation == 'S':
-        latitude = 0 - latitude
-    if longitude_orientation == 'W':
+    match_results = pattern.findall(longitude_parts[0])
+    longitude = round((float(match_results[0][0]) \
+            + (float(match_results[0][1])/60) \
+            + (float(str(float('0.' + longitude_parts[1]) \
+            * 60))/3000)), 2)
+    if  data['longitude_orientation'] == 'W':
         longitude = 0 - longitude
-    pattern = re.compile("(\\d{2})")
-    m = pattern.findall(data['date'])
-    year = '20' + str(m[2])
-    month = str(m[1])
-    day = str(m[0])
-    time_parts = data['time'].split('.')
-    m = pattern.findall(time_parts[0])
-    hour = m[0]
-    minute = m[1]
-    second = m[2]
+    elevation = data['elevation_msl']
     gps_timestamp = datetime.now(timezone.utc)
-    gps_timestamp = gps_timestamp.replace(year=int(year), month=int(month), day=int(day), hour=int(hour), minute=int(minute), second=int(second), microsecond=0)
+    pattern = re.compile("(\\d{2})")
+    match_results = pattern.findall(data['date'])
+    gps_timestamp = gps_timestamp.replace(year=int('20' + str(match_results[2])), \
+            month=int(str(match_results[1])), \
+            day=int(str(match_results[0])))
+    time_parts = data['time'].split('.')
+    match_results = pattern.findall(time_parts[0])
+    gps_timestamp = gps_timestamp.replace(hour=int(match_results[0]), \
+            minute=int(match_results[1]), \
+            second=int(match_results[2]), \
+            microsecond=0)
     #course = data['true_course']
     speed = data['speed_knots']
-    gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(latitude=latitude, longitude=longitude, elevation=elevation, time=gps_timestamp, speed=speed))
+    gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(\
+            latitude=latitude, \
+            longitude=longitude, \
+            elevation=elevation, \
+            time=gps_timestamp, \
+            speed=speed))
     gpx_file_name_10 = gpx_file_name + "-10.gpx"
     path = Path(gpx_file_name_10)
     if path.is_file():
         Path(gpx_file_name_10).rename(gpx_file_name_10 + ".shadow")
-    gpx_file = open(gpx_file_name_10, 'w')
-    gpx_file.write(str(gpx.to_xml('1.0')))
-    gpx_file.close()
+    with open(gpx_file_name_10, "w", encoding="utf8") as gpx_file:
+        gpx_file.write(str(gpx.to_xml('1.0')))
     gpx_file_name_11 = gpx_file_name + "-11.gpx"
     path = Path(gpx_file_name_11)
     if path.is_file():
-         Path(gpx_file_name_11).rename(gpx_file_name_11 + ".shadow")
-    gpx_file = open(gpx_file_name_11, 'w')
-    gpx_file.write(str(gpx.to_xml('1.1')))
-    gpx_file.close()
+        Path(gpx_file_name_11).rename(gpx_file_name_11 + ".shadow")
+    with open(gpx_file_name_11, "w", encoding="utf8") as gpx_file:
+        gpx_file.write(str(gpx.to_xml('1.1')))
 
 def main():
+    '''
+    Main Function to process gps data
+    '''
     found_gps = False
-    while found_gps != True:
+    while not found_gps:
         try:
-            gps = serial.Serial(SERIAL_DEVICE, baudrate = 9600, timeout = 0.5)
+            gps = serial.Serial(SERIAL_DEVICE, baudrate = 9600, timeout = 0.5) # pylint: disable=no-member
             found_gps = True
-        except:
+        except: # pylint: disable=bare-except
             print("An exception occurred, GPS device might not be present")
             time.sleep(5)
     running = True
-    while running == True:
+    while running:
         try:
             text = str()
             time.sleep(1)
@@ -181,9 +210,8 @@ def main():
             #print(data)
             text = human_readable(data)
             print(text)
-            f = open("gps_info.log", "a")
-            f.write(text + "\n")
-            f.close()
+            with open("gps_info.log", "a", encoding="utf8") as info_file:
+                info_file.write(text + "\n")
             save_gpx(data)
         except KeyboardInterrupt:
             running = False
