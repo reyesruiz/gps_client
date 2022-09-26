@@ -101,23 +101,23 @@ def human_readable(data):
         compass_orientation = '-'
     else:
         course = float(true_course)
-        if course >= 0 and course <= 22.5:
+        if course >= 0 <= 22.5:
             compass_orientation = 'N'
-        elif course >= 22.5 and course <= 67.5:
+        elif course >= 22.5 <= 67.5:
             compass_orientation = 'NE'
-        elif course >= 67.5 and course <= 112.5:
+        elif course >= 67.5 <= 112.5:
             compass_orientation = 'E'
-        elif course >= 112.5 and course <= 157.5:
+        elif course >= 112.5 <= 157.5:
             compass_orientation = 'SE'
-        elif course >= 157.5 and course <= 202.5:
+        elif course >= 157.5 <= 202.5:
             compass_orientation = 'S'
-        elif course >= 202.5 and course <= 247.5:
+        elif course >= 202.5 <= 247.5:
             compass_orientation = 'SW'
-        elif course >= 247.5 and course <= 292.5:
+        elif course >= 247.5 <= 292.5:
             compass_orientation = 'W'
-        elif course >= 292.5 and course <= 337.5:
+        elif course >= 292.5 <= 337.5:
             compass_orientation = 'NW'
-        elif course >= 337.5 and course <= 360:
+        elif course >= 337.5 <= 360:
             compass_orientation = 'N'
     satellites = data['number_of_satellites_in_use']
 
