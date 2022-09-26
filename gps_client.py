@@ -1,12 +1,13 @@
 import time
 import re
 from datetime import datetime, timezone
+from pathlib import Path
 import serial
 import gpxpy
 
 SERIAL_DEVICE = "/dev/ttyACM0"
 timestr = time.strftime("%Y%m%d-%H%M%S")
-gpx_file_name = timestr + ".gpx"
+gpx_file_name = timestr
 gpx = gpxpy.gpx.GPX()
 gpx_track = gpxpy.gpx.GPXTrack()
 gpx.tracks.append(gpx_track)
@@ -147,10 +148,17 @@ def save_gpx(data):
     #course = data['true_course']
     speed = data['speed_knots']
     gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(latitude=latitude, longitude=longitude, elevation=elevation, time=gps_timestamp, speed=speed))
-    gpx_file = open(gpx_file_name, 'w')
+    gpx_file_name_10 = gpx_file_name + "-10.gpx"
+    path = Path(gpx_file_name_10)
+    if path.is_file():
+        Path(gpx_file_name_10).rename(gpx_file_name_10 + ".shadow")
+    gpx_file = open(gpx_file_name_10, 'w')
     gpx_file.write(str(gpx.to_xml('1.0')))
     gpx_file.close()
-    gpx_file_name_11 = gpx_file_name + "11.gpx"
+    gpx_file_name_11 = gpx_file_name + "-11.gpx"
+    path = Path(gpx_file_name_11)
+    if path.is_file():
+         Path(gpx_file_name_11).rename(gpx_file_name_11 + ".shadow")
     gpx_file = open(gpx_file_name_11, 'w')
     gpx_file.write(str(gpx.to_xml('1.1')))
     gpx_file.close()
