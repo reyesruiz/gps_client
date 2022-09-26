@@ -196,7 +196,7 @@ def main():
     found_gps = False
     while not found_gps:
         try:
-            gps = serial.Serial(SERIAL_DEVICE, baudrate = 9600, timeout = 0.5)
+            gps = serial.Serial(SERIAL_DEVICE, baudrate = 9600, timeout = 0.5) # pylint: disable=no-member
             found_gps = True
         except: # pylint: disable=bare-except
             print("An exception occurred, GPS device might not be present")
