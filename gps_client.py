@@ -1,3 +1,10 @@
+'''
+Python gps client
+Copyright 2022 Reyes Ruiz
+
+https://github.com/reyesruiz/gps_client
+'''
+
 import time
 import re
 from datetime import datetime, timezone
@@ -15,6 +22,9 @@ gpx_segment = gpxpy.gpx.GPXTrackSegment()
 gpx_track.segments.append(gpx_segment)
 
 def get_position(gps):
+    '''
+    Parsing gps data from device and outputing it to dictionary
+    '''
     gps_data = gps.read_all().decode("utf-8").split('\r\n')
     gps_parsed_data = {'date': "",
                 'time': "",
@@ -54,6 +64,9 @@ def get_position(gps):
     return gps_parsed_data
 
 def human_readable(data):
+    '''
+    Returning a human readable output, with gps information parsed and formatted for better reading, so far it is in degree, minute, second, miles, and feet.
+    '''
     pattern = re.compile("(\\d{2})")
     m = pattern.findall(data['date'])
     year = '20' + str(m[2])
@@ -112,6 +125,9 @@ def human_readable(data):
     return human_readable_text
 
 def save_gpx(data):
+    '''
+    Saving gps data in gpx format both gpx 1.0 and 1.1, 1.0 because it has speed data.
+    '''
     pattern = re.compile("(\\d{2})")
     latitude_parts = data['latitude'].split('.')
     m = pattern.findall(latitude_parts[0])
@@ -158,12 +174,15 @@ def save_gpx(data):
     gpx_file_name_11 = gpx_file_name + "-11.gpx"
     path = Path(gpx_file_name_11)
     if path.is_file():
-         Path(gpx_file_name_11).rename(gpx_file_name_11 + ".shadow")
+        Path(gpx_file_name_11).rename(gpx_file_name_11 + ".shadow")
     gpx_file = open(gpx_file_name_11, 'w')
     gpx_file.write(str(gpx.to_xml('1.1')))
     gpx_file.close()
 
 def main():
+    '''
+    Main Function to process gps data
+    '''
     found_gps = False
     while found_gps != True:
         try:
