@@ -42,7 +42,7 @@ def get_position(gps):
     for message in gps_data[::-1]:
         parts = message.split(',')
         #I want GPRMC and GPGGA
-        if parts[0] == '$GPRMC' and gprmc == False:
+        if parts[0] == '$GPRMC' and not gprmc:
             receiver_warning = parts[2]
             if receiver_warning == 'A':
                 gps_parsed_data['latitude'] = parts[3]
@@ -55,11 +55,11 @@ def get_position(gps):
                 gps_parsed_data['time'] = parts[1]
                 gprmc = True
 
-        elif parts[0] == '$GPGGA' and gpgga == False:
+        elif parts[0] == '$GPGGA' and not gpgga:
             gps_parsed_data['number_of_satellites_in_use'] = parts[7]
             gps_parsed_data['elevation_msl'] = parts[9]
             gpgga = True
-        if gprmc == True and gpgga == True:
+        if gprmc and gpgga:
             break
     return gps_parsed_data
 
@@ -184,7 +184,7 @@ def main():
     Main Function to process gps data
     '''
     found_gps = False
-    while found_gps != True:
+    while not found_gps:
         try:
             gps = serial.Serial(SERIAL_DEVICE, baudrate = 9600, timeout = 0.5)
             found_gps = True
@@ -192,7 +192,7 @@ def main():
             print("An exception occurred, GPS device might not be present")
             time.sleep(5)
     running = True
-    while running == True:
+    while running:
         try:
             text = str()
             time.sleep(1)
