@@ -168,16 +168,14 @@ def save_gpx(data):
     path = Path(gpx_file_name_10)
     if path.is_file():
         Path(gpx_file_name_10).rename(gpx_file_name_10 + ".shadow")
-    gpx_file = open(gpx_file_name_10, 'w')
-    gpx_file.write(str(gpx.to_xml('1.0')))
-    gpx_file.close()
+    with open(gpx_file_name_10, "w", encoding="utf8") as gpx_file:
+        gpx_file.write(str(gpx.to_xml('1.0')))
     gpx_file_name_11 = gpx_file_name + "-11.gpx"
     path = Path(gpx_file_name_11)
     if path.is_file():
         Path(gpx_file_name_11).rename(gpx_file_name_11 + ".shadow")
-    gpx_file = open(gpx_file_name_11, 'w')
-    gpx_file.write(str(gpx.to_xml('1.1')))
-    gpx_file.close()
+    with open(gpx_file_name_11, "w", encoding="utf8") as gpx_file:
+        gpx_file.write(str(gpx.to_xml('1.1')))
 
 def main():
     '''
@@ -200,9 +198,8 @@ def main():
             #print(data)
             text = human_readable(data)
             print(text)
-            info_file = open("gps_info.log", "a")
-            info_file.write(text + "\n")
-            info_file.close()
+            with open("gps_info.log", "a", encoding="utf8") as info_file:
+                info_file.write(text + "\n")
             save_gpx(data)
         except KeyboardInterrupt:
             running = False
