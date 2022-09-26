@@ -70,29 +70,30 @@ def human_readable(data):
     '''
     pattern = re.compile("(\\d{2})")
     match_results = pattern.findall(data['date'])
-    year = '20' + str(match_results[2])
-    month = str(match_results[1])
-    day = str(match_results[0])
-    date = year + '/' + month + '/' + day
-    time_parts = data['time'].split('.')
-    match_results = pattern.findall(time_parts[0])
-    hour = match_results[0]
-    minute = match_results[1]
-    second = match_results[2]
-    gps_time = hour + ':' + minute + ':' + second
+    #GPS Date Time as YYYY/MM/DD hh:mm:ss
+    gps_date_time =  '20' + str(match_results[2]) + '/' \
+            +  str(match_results[1]) + '/' \
+            +  str(match_results[0])
+    match_results = pattern.findall(data['time'].split('.')[0])
+    gps_date_time = gps_date_time + " " \
+            + match_results[0] + ':' \
+            + match_results[1] + ':' \
+            + match_results[2]
     latitude_parts = data['latitude'].split('.')
     match_results = pattern.findall(latitude_parts[0])
-    latitude_degrees = match_results[0]
-    latitude_minutes = match_results[1]
-    latitude_seconds = str(round((float('0.' + latitude_parts[1]) * 60), 2))
-    latitude_orientation = data['latitude_orientation']
+    # latitude degrees minutes seconds orientation
+    latitude = match_results[0] + chr(176) \
+            + match_results[1] + chr(39) \
+            + str(round((float('0.' + latitude_parts[1]) * 60), 2)) + chr(34) \
+            + data['latitude_orientation']
     longitude_parts = data['longitude'].split('.')
     pattern = re.compile("(\\d{3})(\\d{2})")
     match_results = pattern.findall(longitude_parts[0])
-    longitude_degrees = match_results[0][0]
-    longitude_minutes = match_results[0][1]
-    longitude_seconds = str(round((float('0.' + longitude_parts[1]) * 60), 2))
-    longitude_orientation = data['longitude_orientation']
+    # longitude degrees minutes seconds orientation
+    longitude = str(match_results[0][0]) + chr(176) \
+            + str(match_results[0][1]) + chr(39) \
+            + str(round((float('0.' + longitude_parts[1]) * 60), 2)) + chr(34) \
+            + data['longitude_orientation']
     elevation = str(round((float(data['elevation_msl']) * 3.280840), 2))
     speed = str(round((float(data['speed_knots']) * 1.15078), 2))
     true_course = data['true_course']
@@ -122,16 +123,9 @@ def human_readable(data):
             compass_orientation = 'N'
     satellites = data['number_of_satellites_in_use']
 
-    human_readable_text = date + ' '\
-            + gps_time + " " \
-            + latitude_degrees + chr(176) \
-            + latitude_minutes + '\'' \
-            + latitude_seconds + '\"' \
-            + latitude_orientation + " " \
-            + longitude_degrees + chr(176) \
-            + longitude_minutes + '\'' \
-            + longitude_seconds + '\"' \
-            + longitude_orientation + " " \
+    human_readable_text = gps_date_time + ' '\
+            + latitude + " " \
+            + longitude + " " \
             + elevation + "ft MSL " \
             + speed + " Mph " \
             + true_course + chr(176) + " " \
@@ -146,43 +140,33 @@ def save_gpx(data):
     pattern = re.compile("(\\d{2})")
     latitude_parts = data['latitude'].split('.')
     match_results = pattern.findall(latitude_parts[0])
-    latitude_degrees = match_results[0]
-    latitude_minutes = match_results[1]
-    latitude_seconds = str(round((float('0.' + latitude_parts[1]) * 60), 2))
-    latitude_orientation = data['latitude_orientation']
+    latitude = round((float(match_results[0]) \
+            + (float(match_results[1])/60) \
+            + (float(str(float('0.' + latitude_parts[1]) \
+            * 60))/3000)), 2)
+    if data['latitude_orientation'] == 'S':
+        latitude = 0 - latitude
     longitude_parts = data['longitude'].split('.')
     pattern = re.compile("(\\d{3})(\\d{2})")
     match_results = pattern.findall(longitude_parts[0])
-    longitude_degrees = match_results[0][0]
-    longitude_minutes = match_results[0][1]
-    longitude_seconds = str(round((float('0.' + longitude_parts[1]) * 60), 2))
-    longitude_orientation = data['longitude_orientation']
-    elevation = data['elevation_msl']
-    latitude = float(latitude_degrees) + (float(latitude_minutes)/60)+(float(latitude_seconds)/3600)
-    longitude = float(longitude_degrees) \
-            + (float(longitude_minutes)/60)\
-            +(float(longitude_seconds)/3600)
-    if latitude_orientation == 'S':
-        latitude = 0 - latitude
-    if longitude_orientation == 'W':
+    longitude = round((float(match_results[0][0]) \
+            + (float(match_results[0][1])/60) \
+            + (float(str(float('0.' + longitude_parts[1]) \
+            * 60))/3000)), 2)
+    if  data['longitude_orientation'] == 'W':
         longitude = 0 - longitude
+    elevation = data['elevation_msl']
+    gps_timestamp = datetime.now(timezone.utc)
     pattern = re.compile("(\\d{2})")
     match_results = pattern.findall(data['date'])
-    year = '20' + str(match_results[2])
-    month = str(match_results[1])
-    day = str(match_results[0])
+    gps_timestamp = gps_timestamp.replace(year=int('20' + str(match_results[2])), \
+            month=int(str(match_results[1])), \
+            day=int(str(match_results[0])))
     time_parts = data['time'].split('.')
     match_results = pattern.findall(time_parts[0])
-    hour = match_results[0]
-    minute = match_results[1]
-    second = match_results[2]
-    gps_timestamp = datetime.now(timezone.utc)
-    gps_timestamp = gps_timestamp.replace(year=int(year), \
-            month=int(month), \
-            day=int(day), \
-            hour=int(hour), \
-            minute=int(minute), \
-            second=int(second), \
+    gps_timestamp = gps_timestamp.replace(hour=int(match_results[0]), \
+            minute=int(match_results[1]), \
+            second=int(match_results[2]), \
             microsecond=0)
     #course = data['true_course']
     speed = data['speed_knots']
