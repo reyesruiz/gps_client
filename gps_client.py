@@ -84,7 +84,7 @@ def human_readable(data):
     # latitude degrees minutes seconds orientation
     latitude = match_results[0] + chr(176) \
             + match_results[1] + chr(39) \
-            + str(round((float('0.' + latitude_parts[1]) * 60), 2)) + chr(34) \
+            + str(round((float('0.' + latitude_parts[1]) * 60), 4)) + chr(34) \
             + data['latitude_orientation']
     longitude_parts = data['longitude'].split('.')
     pattern = re.compile("(\\d{3})(\\d{2})")
@@ -92,7 +92,7 @@ def human_readable(data):
     # longitude degrees minutes seconds orientation
     longitude = str(match_results[0][0]) + chr(176) \
             + str(match_results[0][1]) + chr(39) \
-            + str(round((float('0.' + longitude_parts[1]) * 60), 2)) + chr(34) \
+            + str(round((float('0.' + longitude_parts[1]) * 60), 4)) + chr(34) \
             + data['longitude_orientation']
     elevation = str(round((float(data['elevation_msl']) * 3.280840), 2))
     speed = str(round((float(data['speed_knots']) * 1.15078), 2))
@@ -143,7 +143,7 @@ def save_gpx(data):
     latitude = round((float(match_results[0]) \
             + (float(match_results[1])/60) \
             + (float(str(float('0.' + latitude_parts[1]) \
-            * 60))/3000)), 2)
+            * 60))/3000)), 8)
     if data['latitude_orientation'] == 'S':
         latitude = 0 - latitude
     longitude_parts = data['longitude'].split('.')
@@ -152,7 +152,7 @@ def save_gpx(data):
     longitude = round((float(match_results[0][0]) \
             + (float(match_results[0][1])/60) \
             + (float(str(float('0.' + longitude_parts[1]) \
-            * 60))/3000)), 2)
+            * 60))/3000)), 8)
     if  data['longitude_orientation'] == 'W':
         longitude = 0 - longitude
     elevation = data['elevation_msl']
