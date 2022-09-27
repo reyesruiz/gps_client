@@ -140,19 +140,19 @@ def save_gpx(data):
     pattern = re.compile("(\\d{2})")
     latitude_parts = data['latitude'].split('.')
     match_results = pattern.findall(latitude_parts[0])
-    latitude = round((float(match_results[0]) \
+    latitude = float(match_results[0]) \
             + (float(match_results[1])/60) \
             + (float(str(float('0.' + latitude_parts[1]) \
-            * 60))/3000)), 8)
+            * 60))/3000)
     if data['latitude_orientation'] == 'S':
         latitude = 0 - latitude
     longitude_parts = data['longitude'].split('.')
     pattern = re.compile("(\\d{3})(\\d{2})")
     match_results = pattern.findall(longitude_parts[0])
-    longitude = round((float(match_results[0][0]) \
+    longitude = float(match_results[0][0]) \
             + (float(match_results[0][1])/60) \
             + (float(str(float('0.' + longitude_parts[1]) \
-            * 60))/3000)), 8)
+            * 60))/3000)
     if  data['longitude_orientation'] == 'W':
         longitude = 0 - longitude
     elevation = data['elevation_msl']
