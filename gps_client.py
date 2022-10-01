@@ -8,18 +8,11 @@ https://github.com/reyesruiz/gps_client
 import time
 import re
 from datetime import datetime, timezone
-from pathlib import Path
 import serial
-import gpxpy
 
 SERIAL_DEVICE = "/dev/ttyACM0"
 timestr = time.strftime("%Y%m%d-%H%M%S")
-gpx_file_name = timestr
-gpx = gpxpy.gpx.GPX()
-gpx_track = gpxpy.gpx.GPXTrack()
-gpx.tracks.append(gpx_track)
-gpx_segment = gpxpy.gpx.GPXTrackSegment()
-gpx_track.segments.append(gpx_segment)
+csv_file_name = timestr
 
 def get_position(gps):
     '''
@@ -133,17 +126,16 @@ def human_readable(data):
             + " satellites in use: " + satellites
     return human_readable_text
 
-def save_gpx(data):
+def save_csv(data):
     '''
-    Saving gps data in gpx format both gpx 1.0 and 1.1, 1.0 because it has speed data.
+    Saving gps data in csv format for converting later to gpx or anything else.
     '''
     pattern = re.compile("(\\d{2})")
     latitude_parts = data['latitude'].split('.')
     match_results = pattern.findall(latitude_parts[0])
     latitude = float(match_results[0]) \
             + (float(match_results[1])/60) \
-            + (float(str(float('0.' + latitude_parts[1]) \
-            * 60))/3000)
+            + (float(str(float('0.' + latitude_parts[1] ))))/60
     if data['latitude_orientation'] == 'S':
         latitude = 0 - latitude
     longitude_parts = data['longitude'].split('.')
@@ -151,8 +143,7 @@ def save_gpx(data):
     match_results = pattern.findall(longitude_parts[0])
     longitude = float(match_results[0][0]) \
             + (float(match_results[0][1])/60) \
-            + (float(str(float('0.' + longitude_parts[1]) \
-            * 60))/3000)
+            + (float(str(float('0.' + longitude_parts[1] ))))/60
     if  data['longitude_orientation'] == 'W':
         longitude = 0 - longitude
     elevation = data['elevation_msl']
@@ -168,26 +159,18 @@ def save_gpx(data):
             minute=int(match_results[1]), \
             second=int(match_results[2]), \
             microsecond=0)
-    #course = data['true_course']
+    course = data['true_course']
     speed = data['speed_knots']
-    gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(\
-            latitude=latitude, \
-            longitude=longitude, \
-            elevation=elevation, \
-            time=gps_timestamp, \
-            speed=speed))
-    gpx_file_name_10 = gpx_file_name + "-10.gpx"
-    path = Path(gpx_file_name_10)
-    if path.is_file():
-        Path(gpx_file_name_10).rename(gpx_file_name_10 + ".shadow")
-    with open(gpx_file_name_10, "w", encoding="utf8") as gpx_file:
-        gpx_file.write(str(gpx.to_xml('1.0')))
-    gpx_file_name_11 = gpx_file_name + "-11.gpx"
-    path = Path(gpx_file_name_11)
-    if path.is_file():
-        Path(gpx_file_name_11).rename(gpx_file_name_11 + ".shadow")
-    with open(gpx_file_name_11, "w", encoding="utf8") as gpx_file:
-        gpx_file.write(str(gpx.to_xml('1.1')))
+    satellites = data['number_of_satellites_in_use']
+    with open(csv_file_name, "a",  encoding="utf8") as csv_file:
+        csv_file.write(','.join([str(latitude), \
+                str(longitude), \
+                str(elevation), \
+                str(speed), \
+                str(course), \
+                str(satellites), \
+                str(gps_timestamp), \
+                "\n"]))
 
 def main():
     '''
@@ -212,12 +195,10 @@ def main():
             print(text)
             with open("gps_info.log", "a", encoding="utf8") as info_file:
                 info_file.write(text + "\n")
-            save_gpx(data)
+            save_csv(data)
         except KeyboardInterrupt:
             running = False
             gps.close()
-            print('Created GPX:', gpx.to_xml())
-            print("Done")
 
 if __name__ == '__main__':
     main()
